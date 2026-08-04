@@ -76,6 +76,10 @@ The offline harness renders the real plugin class headlessly:
     python3 tools/sweep.py                     # no control is silently dead
     tools/verify.sh                            # all of it
 
+<!-- attributions:start -->
+This project is built on other people's work — see [ATTRIBUTIONS.md](ATTRIBUTIONS.md).
+<!-- attributions:end -->
+
 ## Licence
 
 MIT.
