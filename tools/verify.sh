@@ -51,7 +51,14 @@ arches="$(lipo -archs "$binary")"
 # loads and still exports this -- the OBJECT-library note in CMakeLists.txt is
 # what actually guards the registration; this catches a build that produced no
 # module at all.
-nm -gU "$binary" | grep -q '_plugMain' || fail "plugMain not exported"
+# Captured, then matched from a herestring -- never `nm ... | grep -q`.
+# Under `set -o pipefail` a `grep -q` that finds its match exits
+# immediately, the writer upstream takes SIGPIPE, and the PIPELINE
+# reports failure even though the symbol is there. It is output-size
+# dependent, so it fires on the bigger binary first and looks
+# intermittent. A herestring is not a pipeline, so nothing can SIGPIPE.
+symbols=$( nm -gU "$binary" 2>/dev/null || true )
+grep -q '_plugMain' <<<"$symbols" || fail "plugMain not exported"
 
 echo "ok   Nib: $arches, plugMain exported"
 
