@@ -40,8 +40,8 @@ click is worth more than one you have to believe.
 
 | Build | Download | Size |
 | --- | --- | --- |
-| Universal (Apple Silicon + Intel) · .dmg disk image | [`nib-0.1.0-macos-universal.dmg`](https://github.com/stoatworks-labs/nib/releases/download/v0.1.0/nib-0.1.0-macos-universal.dmg) | 194 KB |
-| Universal (Apple Silicon + Intel) · .zip archive | [`nib-macos-universal.zip`](https://github.com/stoatworks-labs/nib/releases/latest/download/nib-macos-universal.zip) | 154 KB |
+| Universal (Apple Silicon + Intel) · .dmg disk image | [`nib-0.1.0-macos-universal.dmg`](https://github.com/stoatworks-labs/nib/releases/download/v0.1.0/nib-0.1.0-macos-universal.dmg) | 214 KB |
+| Universal (Apple Silicon + Intel) · .zip archive | [`nib-macos-universal.zip`](https://github.com/stoatworks-labs/nib/releases/latest/download/nib-macos-universal.zip) | 171 KB |
 
 </details>
 
