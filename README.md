@@ -57,7 +57,7 @@ click is worth more than one you have to believe.
 
 All builds, checksums and release notes: [github.com/stoatworks-labs/nib/releases](https://github.com/stoatworks-labs/nib/releases).
 
-The Windows builds are unsigned, so SmartScreen warns once.
+macOS builds are signed and notarised and open normally. The Windows builds are unsigned, so SmartScreen warns once.
 
 <!-- downloads:end -->
 
