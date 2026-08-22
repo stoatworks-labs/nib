@@ -6,6 +6,9 @@
 
 #include <FFGLSDK.h>
 
+// After FFGLSDK.h, which is where FFUInt32 comes from.
+#include "StoatworksAboutParams.h"
+
 namespace nib
 {
 /**
@@ -24,6 +27,16 @@ public:
 	FFResult DeInitGL() override;
 
 	FFResult SetFloatParameter( unsigned int index, float value ) override;
+
+	char* GetTextParameter( unsigned int index ) override;
+
+	/// Declared only so the About line can accept its own default.
+	/// instantiateGL pushes every declared default back through the setters on
+	/// a fresh instance and deletes the instance if one fails, and
+	/// CFFGLPlugin's SetTextParameter is a stub that returns exactly that
+	/// failure -- so without this override no real host can load the plugin,
+	/// while every offline harness here carries on passing.
+	FFResult SetTextParameter( unsigned int index, const char* value ) override;
 	float GetFloatParameter( unsigned int index ) override;
 
 	/// The smoothed structure tensor, for `nibtest --flow` to probe. Nothing

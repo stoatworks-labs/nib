@@ -53,6 +53,13 @@ int tapsFor( float sigma )
 } // namespace
 
 //---------------------------------------------------------------------------
+// The buttons are declared one per link, so the run in the enum and the run the
+// block actually has must agree. They diverge the day somebody writes a user
+// guide, and this is what says so.
+static_assert( PT_COUNT - PT_ABOUT_TEXT == stoatworks::about::kParamCount,
+               "the About run no longer matches StoatworksAbout.h -- "
+               "add or remove a PT_ABOUT_BUTTON_n to match" );
+
 NibPlugin::NibPlugin()
 {
 	SetMinInputs( 1 );
@@ -159,6 +166,18 @@ NibPlugin::NibPlugin()
 		SetParamGroup( id, "Ink" );
 	SetParamGroup( PT_MIX, "Output" );
 	SetParamGroup( PT_PRESET, "Preset" );
+	// The About block. Declared inline rather than through a helper, because
+	// SetParamInfo is protected on CFFGLPlugin and nothing outside the class
+	// can call it.
+	SetParamInfo( PT_ABOUT_TEXT, "About", FF_TYPE_TEXT, stoatworks::about::defaultText() );
+	{
+		FFUInt32 aboutId = PT_ABOUT_TEXT + 1;
+		for( const auto& b : stoatworks::about::buttons() )
+			SetParamInfo( aboutId++, b.label, FF_TYPE_EVENT, false );
+	}
+	for( unsigned int id = PT_ABOUT_TEXT; id < PT_COUNT; ++id )
+		SetParamGroup( id, "About" );
+
 }
 
 //---------------------------------------------------------------------------
@@ -573,10 +592,43 @@ FFResult NibPlugin::DeInitGL()
 }
 
 //---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+char* NibPlugin::GetTextParameter( unsigned int index )
+{
+	if( index == PT_ABOUT_TEXT )
+	{
+		// Function-local rather than a member: the line is built from
+		// compile-time facts, so it is the same for every instance, and the
+		// host only needs the pointer to outlive the call.
+		static const std::string text = stoatworks::about::textParam( 0 );
+		return const_cast< char* >( text.c_str() );
+	}
+
+	return CFFGLPlugin::GetTextParameter( index );
+}
+
+//---------------------------------------------------------------------------
+FFResult NibPlugin::SetTextParameter( unsigned int index, const char* value )
+{
+	// See the declaration: the base class fails, and a failed default deletes
+	// the instance. The About line is display-only, so there is genuinely
+	// nothing to store -- but it has to say so successfully.
+	if( index == PT_ABOUT_TEXT )
+		return FF_SUCCESS;
+
+	return CFFGLPlugin::SetTextParameter( index, value );
+}
+
 FFResult NibPlugin::SetFloatParameter( unsigned int index, float value )
 {
 	if( index >= PT_COUNT )
 		return FF_FAIL;
+
+	// The About buttons open a browser and store nothing, so they are handled
+	// before any of the bookkeeping below: pressing one is not the operator
+	// editing a control.
+	if( index >= PT_ABOUT_TEXT )
+		return stoatworks::about::handleParam( index - PT_ABOUT_TEXT, value ) ? FF_SUCCESS : FF_FAIL;
 
 	if( index == PT_PRESET )
 	{
