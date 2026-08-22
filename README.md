@@ -29,6 +29,38 @@ plain isotropic XDoG, which is what the effect would be without the idea in
 it. That comparison ships as a preset, because a claim you can check in one
 click is worth more than one you have to believe.
 
+<!-- downloads:start -->
+
+## Download
+
+**[v0.1.0](https://github.com/stoatworks-labs/nib/releases/tag/v0.1.0)** — prebuilt for macOS and Windows. Pick your platform:
+
+<details>
+<summary><b>macOS</b> — Universal (Apple Silicon + Intel)</summary>
+
+| Build | Download | Size |
+| --- | --- | --- |
+| Universal (Apple Silicon + Intel) · .dmg disk image | [`nib-0.1.0-macos-universal.dmg`](https://github.com/stoatworks-labs/nib/releases/download/v0.1.0/nib-0.1.0-macos-universal.dmg) | 194 KB |
+| Universal (Apple Silicon + Intel) · .zip archive | [`nib-macos-universal.zip`](https://github.com/stoatworks-labs/nib/releases/latest/download/nib-macos-universal.zip) | 154 KB |
+
+</details>
+
+<details>
+<summary><b>Windows</b> — x64</summary>
+
+| Build | Download | Size |
+| --- | --- | --- |
+| x64 · .exe installer | [`nib-0.1.0-windows-x86_64-setup.exe`](https://github.com/stoatworks-labs/nib/releases/download/v0.1.0/nib-0.1.0-windows-x86_64-setup.exe) | 214 KB |
+| x64 · .zip archive | [`nib-windows-x86_64.zip`](https://github.com/stoatworks-labs/nib/releases/latest/download/nib-windows-x86_64.zip) | 109 KB |
+
+</details>
+
+All builds, checksums and release notes: [github.com/stoatworks-labs/nib/releases](https://github.com/stoatworks-labs/nib/releases).
+
+The Windows builds are unsigned, so SmartScreen warns once.
+
+<!-- downloads:end -->
+
 ## Controls
 
 - **Detect On** — which channel carries the drawing. A red line on a blue
