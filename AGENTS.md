@@ -177,3 +177,10 @@ after the final iteration.
 - Measured on an M4 Max only: 0.66 ms/frame at 720p, 1.51 at 1080p, 6.60 at
   4K. The 4K figure is 40% of a 60 fps frame and is the one to watch if the
   chain grows.
+
+## Notes
+
+`docs/NOTES.md` carries this repo's working notes — current status, decisions
+already made, and the traps that have actually bitten. Read it before changing
+anything non-obvious. Cross-cutting fleet knowledge lives in
+[fleet-notes](https://github.com/stoatworks-labs/fleet-notes).
