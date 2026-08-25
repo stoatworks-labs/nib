@@ -137,6 +137,14 @@ def parameters(harness):
         name = " ".join(parts[1:-2])
         found.append((name, kind))
 
+    # The About block -- a text line then one browser button per link -- is
+    # declared last and never touches a pixel, so sweeping it only buries a real
+    # dead control. Truncating at "About" rather than naming each button keeps
+    # this right as links are added; publishing the user guide added a fourth.
+    for index, (entry_name, _kind) in enumerate(found):
+        if entry_name == "About":
+            return found[:index]
+
     return found
 
 
