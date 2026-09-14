@@ -83,11 +83,14 @@ Pen, Alpha Ink, Overlay, Cyanotype, Woodcut.
 
 ## Status
 
-**v0.1.0, and honestly early.** It has never been loaded into Resolume —
+**v0.1.3, and honestly early.** It has never been loaded into Resolume —
 everything here is verified through the offline harness, which drives the
 real plugin class headlessly. There is no OpenFX port and no frame-piping
-mode yet. It has only been built and measured on macOS (Apple Silicon):
-0.66 ms/frame at 720p, 1.51 at 1080p, 6.60 at 4K.
+mode yet. It has only been measured on macOS (Apple Silicon): 0.66 ms/frame
+at 720p, 1.51 at 1080p, 6.60 at 4K. A Windows installer ships from CI, and
+nothing has run it in a host. The two point releases since v0.1.1 are a
+Windows installer that no longer touches the system PATH, and dependency
+maintenance.
 
 ## Building and testing
 
