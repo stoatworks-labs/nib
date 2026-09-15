@@ -29,6 +29,10 @@ plain isotropic XDoG, which is what the effect would be without the idea in
 it. That comparison ships as a preset, because a claim you can check in one
 click is worth more than one you have to believe.
 
+![Three test shapes as ink on paper: concentric rings, a hatched panel and a circle](docs/thumb.png)
+
+<sub>Three test shapes as ink on paper — concentric rings, a hatched panel and a circle — rendered by the plugin's own offline harness (`nibtest`), not captured from Resolume.</sub>
+
 <!-- downloads:start -->
 
 ## Download
