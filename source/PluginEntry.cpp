@@ -22,7 +22,7 @@ class NibEffect : public nib::NibPlugin
 static CFFGLPluginInfo PluginInfo(
 	PluginFactory< NibEffect >,                           // Create method
 	"NB01",                                               // Plugin unique ID of maximum length 4
-	"Nib",                                                // Plugin name
+	"SW Nib",                                             // Plugin name
 	2,                                                    // API major version number
 	1,                                                    // API minor version number
 	0,                                                    // Plugin major version number
