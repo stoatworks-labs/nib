@@ -37,14 +37,14 @@ click is worth more than one you have to believe.
 
 ## Download
 
-**[v0.1.4](https://github.com/stoatworks-labs/nib/releases/tag/v0.1.4)** — prebuilt for macOS and Windows. Pick your platform:
+**[v0.1.5](https://github.com/stoatworks-labs/nib/releases/tag/v0.1.5)** — prebuilt for macOS and Windows. Pick your platform:
 
 <details>
 <summary><b>macOS</b> — Universal (Apple Silicon + Intel)</summary>
 
 | Build | Download | Size |
 | --- | --- | --- |
-| Universal (Apple Silicon + Intel) · .dmg disk image | [`nib-0.1.4-macos-universal.dmg`](https://github.com/stoatworks-labs/nib/releases/download/v0.1.4/nib-0.1.4-macos-universal.dmg) | 206 KB |
+| Universal (Apple Silicon + Intel) · .dmg disk image | [`nib-0.1.5-macos-universal.dmg`](https://github.com/stoatworks-labs/nib/releases/download/v0.1.5/nib-0.1.5-macos-universal.dmg) | 206 KB |
 | Universal (Apple Silicon + Intel) · .zip archive | [`nib-macos-universal.zip`](https://github.com/stoatworks-labs/nib/releases/latest/download/nib-macos-universal.zip) | 171 KB |
 
 </details>
@@ -54,8 +54,8 @@ click is worth more than one you have to believe.
 
 | Build | Download | Size |
 | --- | --- | --- |
-| x64 · .exe installer | [`nib-0.1.4-windows-x86_64-setup.exe`](https://github.com/stoatworks-labs/nib/releases/download/v0.1.4/nib-0.1.4-windows-x86_64-setup.exe) | 214 KB |
-| x64 · .zip archive | [`nib-windows-x86_64.zip`](https://github.com/stoatworks-labs/nib/releases/latest/download/nib-windows-x86_64.zip) | 109 KB |
+| x64 · .exe installer | [`nib-0.1.5-windows-x86_64-setup.exe`](https://github.com/stoatworks-labs/nib/releases/download/v0.1.5/nib-0.1.5-windows-x86_64-setup.exe) | 216 KB |
+| x64 · .zip archive | [`nib-windows-x86_64.zip`](https://github.com/stoatworks-labs/nib/releases/latest/download/nib-windows-x86_64.zip) | 110 KB |
 
 </details>
 
