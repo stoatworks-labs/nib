@@ -178,6 +178,10 @@ NibPlugin::NibPlugin()
 	for( unsigned int id = PT_ABOUT_TEXT; id < PT_COUNT; ++id )
 		SetParamGroup( id, "About" );
 
+	//Before InitGL, which is the first thing here that logs. Until this runs
+	//every diag:: call in this file is dropped by the g_ready guard in write(),
+	//taking the shader-compile error that names the failing pass with it.
+	diag::init();
 }
 
 //---------------------------------------------------------------------------
