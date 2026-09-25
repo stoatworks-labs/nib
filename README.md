@@ -33,6 +33,10 @@ click is worth more than one you have to believe.
 
 <sub>Three test shapes as ink on paper — concentric rings, a hatched panel and a circle — rendered by the plugin's own offline harness (`nibtest`), not captured from Resolume.</sub>
 
+[![nib — flow-guided line drawing for Resolume](docs/video-thumb.png)](https://www.youtube.com/watch?v=T0nKJW0gyGo)
+
+*[Watch it](https://www.youtube.com/watch?v=T0nKJW0gyGo) — 55 seconds: Flow taken away and given back, Scale from a hairline to a broad stroke and a heavier Weight, Threshold greying the paper and Falloff from a faint wash to a hard pen line, Coherence, Length and Passes on straight railings, Detect On moving from luma to saturation to red, Stability from fresh every frame to lingering, and the clip itself, dimmed, as paper before a brown ink on cream and Mix back to the clip. Rendered by the plugin's own harness over Resolume's bundled demo clips, not captured from Resolume.*
+
 <!-- downloads:start -->
 
 ## Download
