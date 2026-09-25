@@ -180,6 +180,52 @@ step "Checks"
 "$BUILD/nibtest" --presets "$BUILD/presets-sheet.png"
 
 #---------------------------------------------------------------------------
+step "Pipe"
+#---------------------------------------------------------------------------
+# The fleet's --pipe contract: whole frames only, a cue naming no parameter
+# refused with exit 2, and exit 1 -- never SIGPIPE's 141 -- on a failed render
+# or a closed stdout. Under `set -e` a failing pipeline would end the script
+# before it could say which case failed, so the checks run with it off.
+set +e
+pipe_frame=$(( 64 * 36 * 4 ))
+pipe_raw=$( mktemp ); pipe_many=$( mktemp ); pipe_cues=$( mktemp )
+head -c $(( pipe_frame * 5 / 2 )) /dev/zero > "$pipe_raw"
+head -c $(( pipe_frame * 40 )) /dev/zero > "$pipe_many"
+
+pipe_got=$( "$BUILD/nibtest" --pipe --size 64x36 < "$pipe_raw" 2>/dev/null | wc -c | tr -d ' ' )
+pipe_status=${PIPESTATUS[0]}
+[[ "$pipe_status" -eq 0 && "$pipe_got" = "$(( pipe_frame * 2 ))" ]] \
+	|| fail "--pipe: 2.5 frames in gave $pipe_got bytes out (want $(( pipe_frame * 2 ))), exit $pipe_status"
+echo "ok   2.5 frames in, exactly 2 frames out, clean exit"
+
+# Read from a file, not a pipe: a writer killed by SIGPIPE would fail the
+# pipeline whatever nibtest did, and the refusal would pass for the wrong reason.
+printf '0 No Such Control 0.5\n' > "$pipe_cues"
+"$BUILD/nibtest" --pipe --size 64x36 --script "$pipe_cues" < "$pipe_raw" >/dev/null 2>&1
+pipe_status=$?
+[[ "$pipe_status" -eq 2 ]] || fail "--pipe: a cue naming no parameter gave exit $pipe_status, not 2"
+echo "ok   a cue naming no parameter is refused (exit 2)"
+
+# A failed render stops the stream with exit 1 and nothing after it. The
+# failure is injected by the harness (--fail-render-at), because the plugin
+# only fails on input no ffmpeg would send.
+pipe_got=$( "$BUILD/nibtest" --pipe --size 64x36 --fail-render-at 1 < "$pipe_raw" 2>/dev/null | wc -c | tr -d ' ' )
+pipe_status=${PIPESTATUS[0]}
+[[ "$pipe_status" -eq 1 && "$pipe_got" = "$pipe_frame" ]] \
+	|| fail "--pipe: a failed render at frame 1 gave exit $pipe_status and $pipe_got bytes (want 1 and $pipe_frame)"
+echo "ok   a failed render at frame 1: exit 1, one frame out"
+
+# A reader that takes one byte and goes away: forty frames is far more than a
+# pipe buffer holds, so a write after head leaves must fail. Exit 1, said on
+# stderr -- not the 141 of a process SIGPIPE killed before it could say anything.
+"$BUILD/nibtest" --pipe --size 64x36 < "$pipe_many" 2>/dev/null | head -c 1 >/dev/null
+pipe_status=${PIPESTATUS[0]}
+[[ "$pipe_status" -eq 1 ]] || fail "--pipe: a closed stdout gave exit $pipe_status, not 1"
+echo "ok   a closed stdout (| head -c 1): exit 1"
+rm -f "$pipe_raw" "$pipe_many" "$pipe_cues"
+set -e
+
+#---------------------------------------------------------------------------
 step "Dead controls"
 #---------------------------------------------------------------------------
 # The only thing that catches a uniform whose name does not match the C++.

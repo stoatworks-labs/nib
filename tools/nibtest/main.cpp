@@ -10,6 +10,7 @@
         nibtest --presets /tmp/p.png     every preset, checked live and distinct
         nibtest --flow                   does smoothing the tensor actually help?
         nibtest --bench                  time a frame at 720p through 4K
+        nibtest --pipe                   raw frames in, raw frames out
 
     The card is built so that one region has an **analytically known** edge
     direction: a set of concentric rings, where the tangent at any pixel is
@@ -20,6 +21,19 @@
     Several frames are rendered rather than one, always: the temporal filter
     needs to settle, and a single frame would report the unstabilised
     behaviour of a plugin whose default Stability is not zero.
+
+    `--pipe` takes the fleet's frame format, so the project video can be
+    rendered through the real plugin rather than filmed:
+
+        ffmpeg -i in.mov -f rawvideo -pix_fmt rgba - \
+          | nibtest --pipe --size 1920x1080 [--script cues.txt] \
+          | ffmpeg -f rawvideo -pix_fmt rgba -s 1920x1080 -i - out.mov
+
+    `--script` is a plain text file of `frame  Parameter Name  value` lines,
+    the same format as the rest of the fleet's harnesses. Values are held
+    before the first key and after the last, and linearly interpolated
+    between -- options and the Passes integer included, so a sheet that wants
+    a step writes the old value on the frame before the new one.
 */
 
 #include "Controls.h"
@@ -35,8 +49,14 @@
 #include <chrono>
 #include <cmath>
 #include <cstdio>
+#include <csignal>
 #include <cstring>
+#include <fstream>
+#include <map>
+#include <sstream>
 #include <string>
+#include <unistd.h>
+#include <utility>
 #include <vector>
 
 using namespace nib;
@@ -823,6 +843,188 @@ int runPresetSheet( const std::string& path )
 }
 
 //---------------------------------------------------------------------------
+// --pipe cue sheet: one 'frame Name Value' per line, the fleet's format.
+//---------------------------------------------------------------------------
+using Track = std::vector< std::pair< int, float > >;
+
+std::map< std::string, Track > loadScript( const std::string& path, std::string& error )
+{
+	std::map< std::string, Track > tracks;
+	std::ifstream file( path );
+	if( !file )
+	{
+		error = "cannot open " + path;
+		return tracks;
+	}
+	std::string line;
+	int lineNumber = 0;
+	while( std::getline( file, line ) )
+	{
+		++lineNumber;
+		const size_t hash = line.find( '#' );
+		if( hash != std::string::npos )
+			line.erase( hash );
+		std::istringstream in( line );
+		int frame = 0;
+		if( !( in >> frame ) )
+			continue;//blank or comment
+		//The name is everything up to the last token, because parameters have
+		//spaces in them ("Detect On") and the value never does.
+		std::vector< std::string > words;
+		std::string word;
+		while( in >> word )
+			words.push_back( word );
+		if( words.size() < 2 )
+		{
+			error = path + ":" + std::to_string( lineNumber ) + ": expected `frame Parameter Name value`";
+			return {};
+		}
+		const float value = std::strtof( words.back().c_str(), nullptr );
+		words.pop_back();
+		std::string name = words.front();
+		for( size_t i = 1; i < words.size(); ++i )
+			name += " " + words[ i ];
+		tracks[ name ].emplace_back( frame, value );
+	}
+	for( auto& entry : tracks )
+		std::sort( entry.second.begin(), entry.second.end() );
+	return tracks;
+}
+
+float valueAt( const Track& track, int frame )
+{
+	if( track.empty() )
+		return 0.0f;
+	if( frame <= track.front().first )
+		return track.front().second;
+	if( frame >= track.back().first )
+		return track.back().second;
+	for( size_t i = 1; i < track.size(); ++i )
+		if( frame <= track[ i ].first )
+		{
+			const auto& a    = track[ i - 1 ];
+			const auto& b    = track[ i ];
+			const float span = static_cast< float >( b.first - a.first );
+			const float t    = span > 0.0f ? static_cast< float >( frame - a.first ) / span : 1.0f;
+			return a.second + ( b.second - a.second ) * t;
+		}
+	return track.back().second;
+}
+
+//---------------------------------------------------------------------------
+// --pipe: raw RGBA frames on stdin, the plugin's frames on stdout.
+//
+// Everything but the video goes to stderr: one stray byte in stdout is a torn
+// frame for the rest of the reel. Exit 2 for a sheet naming no parameter, 1
+// for a failed render or a reader that has gone, 0 at the end of the stream.
+//---------------------------------------------------------------------------
+int runPipe( NibPlugin& plugin, int width, int height, const std::string& scriptPath, int failRender )
+{
+	std::map< unsigned int, Track > automation;
+	if( !scriptPath.empty() )
+	{
+		std::string error;
+		const std::map< std::string, Track > tracks = loadScript( scriptPath, error );
+		if( !error.empty() )
+		{
+			std::fprintf( stderr, "%s\n", error.c_str() );
+			return 2;
+		}
+		//Resolve the names once, up front, and refuse to run on one that is not
+		//a parameter. A misspelled name that silently did nothing would give a
+		//take that looks deliberate and is wrong.
+		const std::vector< NamedParameter > known = listParameters( plugin );
+		for( const auto& entry : tracks )
+		{
+			bool found = false;
+			for( const NamedParameter& parameter : known )
+			{
+				if( parameter.name != entry.first )
+					continue;
+				automation[ parameter.index ] = entry.second;
+				found                         = true;
+				break;
+			}
+			if( !found )
+			{
+				std::fprintf( stderr, "script names '%s', which is not a parameter (try --list)\n", entry.first.c_str() );
+				return 2;
+			}
+		}
+	}
+
+	//A closed stdout must be a failed write we can see, not a SIGPIPE that
+	//kills the process with 141 before it can say so.
+	std::signal( SIGPIPE, SIG_IGN );
+
+	Session session;
+	if( !session.begin( plugin, width, height ) )
+		return 1;
+
+	std::vector< unsigned char > frame( static_cast< size_t >( width ) * height * 4 );
+	int status = 0;
+	for( int index = 0;; ++index )
+	{
+		size_t got = 0;
+		while( got < frame.size() )
+		{
+			const ssize_t n = read( STDIN_FILENO, frame.data() + got, frame.size() - got );
+			if( n <= 0 )
+				break;
+			got += static_cast< size_t >( n );
+		}
+		//A partial frame is the end of the stream, never a frame.
+		if( got < frame.size() )
+		{
+			if( got > 0 )
+				std::fprintf( stderr, "partial frame at the end (%zu of %zu bytes, %dx%d): dropped\n", got, frame.size(), width, height );
+			break;
+		}
+
+		//Through the plugin's own setter, so a cue moves what a slider would.
+		for( const auto& track : automation )
+			plugin.SetFloatParameter( track.first, valueAt( track.second, index ) );
+
+		//Flipped on the way in: a raw frame arrives top row first and GL
+		//wants bottom row first.
+		const std::vector< unsigned char > flipped = flipRows( frame, width, height );
+		glBindTexture( GL_TEXTURE_2D, session.sourceTexture );
+		glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, flipped.data() );
+		glBindTexture( GL_TEXTURE_2D, 0 );
+
+		//One frame, no noise: run() leaves the source texture alone at noise 0,
+		//so what it renders is the frame just uploaded.
+		const bool rendered = index != failRender && session.run( plugin, 1, 0.0f );
+		if( !rendered )
+		{
+			std::fprintf( stderr, "render failed at frame %d\n", index );
+			status = 1;
+			break;
+		}
+
+		const std::vector< unsigned char > out = session.readback();
+		size_t written                         = 0;
+		while( written < out.size() )
+		{
+			const ssize_t put = write( STDOUT_FILENO, out.data() + written, out.size() - written );
+			if( put <= 0 )
+				break;
+			written += static_cast< size_t >( put );
+		}
+		//The reader has gone: rendering on into a closed pipe is work nobody
+		//will see, and a short frame is worse than none.
+		if( written < out.size() )
+		{
+			std::fprintf( stderr, "stdout closed at frame %d\n", index );
+			status = 1;
+			break;
+		}
+	}
+	plugin.DeInitGL();
+	return status;
+}
+
+//---------------------------------------------------------------------------
 int runBench()
 {
 	struct Size
@@ -878,6 +1080,9 @@ int main( int argc, char** argv )
 	bool doList = false;
 	bool doFlow = false;
 	bool doBench = false;
+	bool doPipe = false;
+	std::string scriptPath;
+	int failRender = -1;
 
 	for( int i = 1; i < argc; ++i )
 	{
@@ -898,6 +1103,9 @@ int main( int argc, char** argv )
 				"  --presets PATH        contact sheet of every preset, checked live and distinct\n"
 				"  --flow                measure the flow field against an analytic tangent\n"
 				"  --bench               time a frame at 720p through 4K\n"
+				"  --pipe                raw RGBA frames on stdin, raw RGBA frames on stdout\n"
+				"  --script PATH         parameter cues for --pipe: 'frame Name Value'\n"
+				"  --fps N               accepted for the fleet's --pipe contract; this plugin has no clock\n"
 				"  --help\n" );
 			return 0;
 		}
@@ -919,6 +1127,18 @@ int main( int argc, char** argv )
 			doFlow = true;
 		else if( argument == "--bench" )
 			doBench = true;
+		else if( argument == "--pipe" )
+			doPipe = true;
+		else if( argument == "--script" && hasNext )
+			scriptPath = argv[ ++i ];
+		else if( argument == "--fps" && hasNext )
+			++i;//no clock in this plugin: every frame is the same picture for the same input
+		else if( argument == "--fail-render-at" && hasNext )
+			failRender = std::atoi( argv[ ++i ] );//test hook: verify.sh proves --pipe exits 1 on a failed render
+		else if( argument == "--width" && hasNext )
+			width = std::atoi( argv[ ++i ] );
+		else if( argument == "--height" && hasNext )
+			height = std::atoi( argv[ ++i ] );
 		else if( argument == "--size" && hasNext )
 		{
 			const std::string value = argv[ ++i ];
@@ -969,7 +1189,23 @@ int main( int argc, char** argv )
 
 	int result = 0;
 
-	if( doFlow )
+	if( doPipe )
+	{
+		NibPlugin plugin;
+		for( const std::string& setting : settings )
+		{
+			std::string error;
+			if( !applySetting( plugin, setting, error ) )
+			{
+				std::fprintf( stderr, "--set %s: %s\n", setting.c_str(), error.c_str() );
+				CGLSetCurrentContext( nullptr );
+				CGLDestroyContext( context );
+				return 2;
+			}
+		}
+		result = runPipe( plugin, width, height, scriptPath, failRender );
+	}
+	else if( doFlow )
 		result = runFlowCheck();
 	else if( !presetsPath.empty() )
 		result = runPresetSheet( presetsPath );
