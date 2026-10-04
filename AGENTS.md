@@ -170,10 +170,12 @@ after the final iteration.
 ## What has not been done
 
 - **Never loaded into Resolume.** Everything here is the offline harness.
-- **No OFX port**, and no `--pipe`/`--script`, so the fleet's project-video
-  pipeline cannot film it yet.
-- **Not built on Windows or Linux.** The CMake is the fleet's and should
-  work; nothing has proven it.
+- **No OFX port.** The harness has had the fleet's frame pipe,
+  `nibtest --pipe`/`--script`, since 2026-09-25 (no plugin change), and the
+  project video was rendered with it over Resolume's bundled demo clips.
+- **Windows is built in CI and never run in a host.** Every release ships a
+  Windows installer and zip from CI; nothing has loaded either into Resolume.
+  There is no Linux build.
 - Measured on an M4 Max only: 0.66 ms/frame at 720p, 1.51 at 1080p, 6.60 at
   4K. The 4K figure is 40% of a 60 fps frame and is the one to watch if the
   chain grows.

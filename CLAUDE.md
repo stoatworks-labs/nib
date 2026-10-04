@@ -53,8 +53,9 @@ iteration.
 - Public repo. "Commit" = commit **and** push.
 
 ## Not done yet
-- Never loaded into Resolume; no OFX port; no `--pipe`/`--script`, so the
-  fleet's video pipeline cannot film it. Never built on Windows or Linux.
+- Never loaded into Resolume; no OFX port. The frame pipe
+  (`nibtest --pipe`/`--script`) exists since 2026-09-25 and filmed the project
+  video. Windows ships from CI but has never run in a host; no Linux build.
 
 ## Diagnostics
 
