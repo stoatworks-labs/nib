@@ -24,9 +24,14 @@ renders rings whose tangent is known in closed form, adds noise, and reports the
 error in degrees.
 
 **Honest status:** never loaded into Resolume — everything is the offline
-harness driving the real plugin class. No OpenFX port, no `--pipe`/`--script`,
-so the fleet's video pipeline cannot film it. Measured only on macOS Apple
-Silicon (0.66 ms/frame at 720p, 1.51 at 1080p, 6.60 at 4K).
+harness driving the real plugin class. No OpenFX port. `nibtest --pipe`/`--script`
+is the fleet's frame pipe (2026-09-25, harness only, no plugin change), and the
+project video was rendered with it over Resolume's bundled demo clips. Measured
+only on macOS Apple Silicon (0.66 ms/frame at 720p, 1.51 at 1080p, 6.60 at 4K).
+
+**2026-10-04:** the current release is v0.1.5. v0.1.4 named it `SW Nib` in
+Resolume's browser; v0.1.5 calls `diag::init()`, so the log is actually written —
+the logger had never been initialised, and every line was dropped.
 
 ## What its first release needed, none of which existed
 

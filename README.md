@@ -91,14 +91,18 @@ Pen, Alpha Ink, Overlay, Cyanotype, Woodcut.
 
 ## Status
 
-**v0.1.3, and honestly early.** It has never been loaded into Resolume —
+**v0.1.5, and honestly early.** It has never been loaded into Resolume —
 everything here is verified through the offline harness, which drives the
-real plugin class headlessly. There is no OpenFX port and no frame-piping
-mode yet. It has only been measured on macOS (Apple Silicon): 0.66 ms/frame
-at 720p, 1.51 at 1080p, 6.60 at 4K. A Windows installer ships from CI, and
-nothing has run it in a host. The two point releases since v0.1.1 are a
-Windows installer that no longer touches the system PATH, and dependency
-maintenance.
+real plugin class headlessly. There is no OpenFX port. Since 2026-09-25 the
+harness has the fleet's frame-piping mode, `nibtest --pipe`/`--script`, with
+no change to the plugin, and the video above was rendered with it over
+Resolume's bundled demo clips. It has only been measured on macOS (Apple
+Silicon): 0.66 ms/frame at 720p, 1.51 at 1080p, 6.60 at 4K. A Windows
+installer ships from CI, and nothing has run it in a host. The four point
+releases since v0.1.1 are a Windows installer that no longer touches the
+system PATH, dependency maintenance, the name `SW Nib` in Resolume's browser
+(v0.1.4), and a log file that is actually written (v0.1.5): the logger was
+never initialised, so every line was dropped.
 
 ## Building and testing
 
