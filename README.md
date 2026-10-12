@@ -2,40 +2,41 @@
 
 > **AI-assisted project.** This codebase was created with [Claude](https://claude.com/claude-code)
 > (Anthropic), directed and reviewed by a human author. The filtering is
-> GPU-only and has no C++ mirror, so the central claim is not asserted but
-> measured: `nibtest --flow` renders concentric rings whose tangent direction
+> GPU-only and has no C++ mirror, so the central claim is measured rather than
+> asserted: `nibtest --flow` renders concentric rings whose tangent direction
 > is known in closed form, adds noise, and reports how far the plugin's own
-> flow field is from the truth in degrees — probing the same shader code that
+> flow field is from the truth in degrees, probing the same shader code that
 > ships. A control sweep fails if any parameter turns out to do nothing (see
 > [Building and testing](#building-and-testing)).
 
-Line drawing for Resolume Arena/Avenue, as an FFGL effect. It turns a clip
-into ink — continuous, closed strokes on paper, not a glowing outline.
+Line drawing for Resolume Arena and Avenue, as an FFGL effect. It turns a clip
+into ink: continuous, closed strokes on paper, rather than the glowing outline
+most edge effects give you.
 
 Most edge effects ask one question per pixel: *how fast is tone changing
-here?* That gives a magnitude, which has no memory of direction, so it cannot
-tell a stroke from a speck and its answer at one pixel has nothing to do with
+here?* That gives a magnitude, which has no memory of direction, so it can't
+tell a stroke from a speck, and its answer at one pixel has nothing to do with
 its answer at the neighbour along the same line.
 
 nib asks which way the drawing runs first, and then steers two filters by
-that answer in opposite directions — a difference of Gaussians **across** the
+that answer in opposite directions: a difference of Gaussians **across** the
 flow, which is the only direction in which a band-pass is measuring an edge
 at all, and a line integral convolution **along** it, which is what joins a
 per-pixel response into a stroke. A pixel whose neighbours along the same
-line agree survives; one that fired on its own does not.
+line agree survives; one that fired on its own doesn't.
 
-Turn `Flow` down to zero and the second filter is skipped: what is left is
+Turn `Flow` down to zero and the second filter is skipped: what's left is
 plain isotropic XDoG, which is what the effect would be without the idea in
-it. That comparison ships as a preset, because a claim you can check in one
-click is worth more than one you have to believe.
+it. That comparison ships as a preset, so you can check the claim in one
+click rather than taking my word for it.
 
 ![Three test shapes as ink on paper: concentric rings, a hatched panel and a circle](docs/thumb.png)
 
-<sub>Three test shapes as ink on paper — concentric rings, a hatched panel and a circle — rendered by the plugin's own offline harness (`nibtest`), not captured from Resolume.</sub>
+<sub>Three test shapes as ink on paper (concentric rings, a hatched panel and a circle), rendered by the plugin's own offline harness (`nibtest`) rather than captured from Resolume.</sub>
 
-[![nib — flow-guided line drawing for Resolume](docs/video-thumb.png)](https://www.youtube.com/watch?v=T0nKJW0gyGo)
+[![nib: flow-guided line drawing for Resolume](docs/video-thumb.png)](https://www.youtube.com/watch?v=T0nKJW0gyGo)
 
-*[Watch it](https://www.youtube.com/watch?v=T0nKJW0gyGo) — 55 seconds: Flow taken away and given back, Scale from a hairline to a broad stroke and a heavier Weight, Threshold greying the paper and Falloff from a faint wash to a hard pen line, Coherence, Length and Passes on straight railings, Detect On moving from luma to saturation to red, Stability from fresh every frame to lingering, and the clip itself, dimmed, as paper before a brown ink on cream and Mix back to the clip. Rendered by the plugin's own harness over Resolume's bundled demo clips, not captured from Resolume.*
+*[Watch it](https://www.youtube.com/watch?v=T0nKJW0gyGo) (55 seconds): Flow taken away and given back, Scale from a hairline to a broad stroke and a heavier Weight, Threshold greying the paper and Falloff from a faint wash to a hard pen line, Coherence, Length and Passes on straight railings, Detect On moving from luma to saturation to red, Stability from fresh every frame to lingering, and the clip itself, dimmed, as paper before a brown ink on cream and Mix back to the clip. It's rendered by the plugin's own harness over Resolume's bundled demo clips rather than captured from Resolume.*
 
 <!-- downloads:start -->
 
@@ -71,19 +72,19 @@ macOS builds are signed and notarised and open normally. The Windows builds are 
 
 ## Controls
 
-- **Detect On** — which channel carries the drawing. A red line on a blue
+- **Detect On:** which channel carries the drawing. A red line on a blue
   field has enormous chroma contrast and almost no luminance contrast, so
-  Saturation is not an exotic setting.
-- **Line** — Scale (how fine a drawing), Sharpness, Threshold, Falloff (wash
+  Saturation isn't an exotic setting.
+- **Line:** Scale (how fine a drawing), Sharpness, Threshold, Falloff (wash
   to pen line), Weight (a heavier nib, dilated rather than blurred).
-- **Flow** — Flow (off is plain XDoG), Coherence (how far apart two edges may
-  be before they are allowed to disagree about direction), Length (how far
+- **Flow:** Flow (off is plain XDoG), Coherence (how far apart two edges may
+  be before they're allowed to disagree about direction), Length (how far
   along a stroke to reach for the rest of it), Passes (1–3; each iteration
   darkens what the last one believed and runs again, which is what closes
   gaps in a faint edge).
-- **Time** — Stability. Asymmetric on purpose: ink appears at once and fades
+- **Time:** Stability. Asymmetric on purpose: ink appears at once and fades
   slowly, because a line that arrives late is drawn on the wrong frame.
-- **Ink** — ink and paper colour, or the clip itself as paper, dimmed or not,
+- **Ink:** ink and paper colour, or the clip itself as paper, dimmed or not,
   or nothing at all for an alpha layer.
 
 Eight factory instruments: Pen and Ink, Unguided (XDoG), Charcoal, Technical
@@ -91,18 +92,18 @@ Pen, Alpha Ink, Overlay, Cyanotype, Woodcut.
 
 ## Status
 
-**v0.1.5, and honestly early.** It has never been loaded into Resolume —
+**v0.1.5, and still early days.** It's never been loaded into Resolume;
 everything here is verified through the offline harness, which drives the
-real plugin class headlessly. There is no OpenFX port. Since 2026-09-25 the
-harness has the fleet's frame-piping mode, `nibtest --pipe`/`--script`, with
+real plugin class headlessly. There's no OpenFX port. Since 2026-09-25 the
+harness has had the fleet's frame-piping mode, `nibtest --pipe`/`--script`, with
 no change to the plugin, and the video above was rendered with it over
-Resolume's bundled demo clips. It has only been measured on macOS (Apple
+Resolume's bundled demo clips. It's only been measured on macOS (Apple
 Silicon): 0.66 ms/frame at 720p, 1.51 at 1080p, 6.60 at 4K. A Windows
 installer ships from CI, and nothing has run it in a host. The four point
 releases since v0.1.1 are a Windows installer that no longer touches the
 system PATH, dependency maintenance, the name `SW Nib` in Resolume's browser
-(v0.1.4), and a log file that is actually written (v0.1.5): the logger was
-never initialised, so every line was dropped.
+(v0.1.4), and a log file that's actually written (v0.1.5): the logger was
+never initialised, so every line went straight in the bin.
 
 ## Building and testing
 
