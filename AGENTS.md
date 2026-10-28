@@ -162,6 +162,9 @@ scale's drawing decaying underneath it.
     tools/nibtest/           the offline harness (drives the real classes).
     tools/sweep.py           no control is silently dead.
     tools/verify.sh          all of it.
+    demo/                    the browser demo. shaders.js is GENERATED from
+                             Shaders.cpp; plugin.js is the page and its port.
+    demo/tools/              check_shaders.py: the copies have not drifted.
 
 Pass chain: copy → tone → tensor → tensorBlur×2 → **{ dog → lic → reinject }
 × Passes** → threshold → stabilise → composite. The reinjection is skipped
@@ -179,6 +182,56 @@ after the final iteration.
 - Measured on an M4 Max only: 0.66 ms/frame at 720p, 1.51 at 1080p, 6.60 at
   4K. The 4K figure is 40% of a 60 fps frame and is the one to watch if the
   chain grows.
+
+## The browser demo (2026-10-28)
+
+`demo/` is <https://nib-demo.stoatworks-labs.com>, built to the fleet's
+`resolume-demo` kit rules (`~/Projects/resolume/specs/DEMO-BRIEF.md`). What a
+reader of it must know:
+
+- **There is no CPU half to port.** Strokes come out of the GPU chain and
+  nothing else (no readback, no contour following), so every pass on the page
+  is the plugin's GLSL: the twelve `R"( ... )"` pieces of `Shaders.cpp`,
+  spliced by `demo/tools/check_shaders.py --write` into `demo/shaders.js` and
+  compared character for character. It also fails on a piece it does not list
+  and on a change to the join on either side (`DoGShaderSource()`,
+  `LicShaderSource()`, InitGL's stage table, and plugin.js's copy of them).
+  The flow probe's `probeMain` is harness-only and not on the page. All ten
+  programs compile and link in WebGL2 as spliced (ANGLE on Metal, M4 Max), and
+  no uniform the page sets is missing from its program.
+- **What is ported, and only a reader checks it:** `Controls.cpp` (in float,
+  `Math.fround` at each step, so a tap count lands where the plugin's does),
+  `Presets.h`, and the host glue: ProcessOpenGL's pass order, buffer formats,
+  the nearest-sampled history, tap counts, iteration count and the LIC skip at
+  Flow 0, and SetFloatParameter's rule that Detect On, Scale or Passes drops
+  the history (the page compares those three every frame). Change one of them
+  and change `demo/plugin.js` with it.
+- **Checked once against the real plugin class, not continuously.** On
+  2026-10-28 the page's own input frames (read back from the kit's clip
+  texture) went through `nibtest --pipe` at the same settings and the two
+  outputs were compared, at 960 × 540: 26 settings, covering the defaults on
+  the geometry card and the scene, every Line and Flow control moved, each
+  paper, Saturation, seven presets applied through the page's menu, and a
+  paused fade at Stability 1. 23 came out within one level of 255 everywhere;
+  the other three had 1, 1 and 4 pixels further off, at most 12 levels, on
+  hard ink edges. Nothing in the repo reruns it. To repeat it, read a frame and
+  the canvas back from the page, feed the frame to
+  `nibtest --pipe --size WxH --set …` a dozen times, and compare the last frame
+  out with the canvas.
+- **Decisions.** Preset is the kit's preset menu, not a panel row (tinsel's
+  precedent). The kit's menu resets whatever a preset does not name, so
+  `params.apply` is wrapped to carry Detect On and Mix through, as
+  `applyPreset` leaves them. Paused, the page keeps running the chain on the
+  held frame for three seconds after any change: Resolume keeps processing an
+  effect on a paused clip, and without it a Stability fade stops part-way. The
+  geometry card is the first clip, because the kit's synthetic scene is dark and
+  low in contrast and draws little but its horizon at the defaults (the plugin
+  does exactly the same with it).
+- **Flow shows less on the page than on footage.** The kit's clips are clean;
+  on the geometry card Flow 0 moves about one pixel in twenty. The fine-detail
+  clip's noise band, at a small Scale with Threshold raised, is where it shows.
+- `demo/vendor/` is the shared kit: never edit it; re-vendor with
+  `stoatworks-backend/resolume-demo/sync.sh`.
 
 ## Notes
 

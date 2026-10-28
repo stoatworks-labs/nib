@@ -127,6 +127,29 @@ step "Shaders"
 shaders_compile || fail "a shader does not compile"
 
 #---------------------------------------------------------------------------
+step "Browser demo's shaders"
+#---------------------------------------------------------------------------
+# demo/shaders.js carries copies of source/Shaders.cpp for the browser demo. A
+# copy that drifts still draws a plausible picture, so the drift has to fail
+# here instead: rerun `python3 demo/tools/check_shaders.py --write` after
+# changing a shader. It also checks the DoG and LIC passes are assembled on the
+# page as DoGShaderSource()/LicShaderSource() assemble them.
+if [[ -f demo/tools/check_shaders.py ]]; then
+	log="$( mktemp )"
+	if python3 demo/tools/check_shaders.py >"$log" 2>&1; then
+		echo "   $( tail -1 "$log" )"
+	else
+		tail -14 "$log"
+		fail "the demo's shaders have drifted from source/Shaders.cpp"
+	fi
+	rm -f "$log"
+elif [[ -d demo ]]; then
+	fail "demo/ exists but demo/tools/check_shaders.py does not"
+else
+	echo "   skipped: no demo/"
+fi
+
+#---------------------------------------------------------------------------
 step "Submodule"
 #---------------------------------------------------------------------------
 if [[ ! -f external/ffgl/CMakeLists.txt ]]; then

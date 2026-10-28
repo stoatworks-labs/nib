@@ -105,6 +105,20 @@ system PATH, dependency maintenance, the name `SW Nib` in Resolume's browser
 (v0.1.4), and a log file that's actually written (v0.1.5): the logger was
 never initialised, so every line went straight in the bin.
 
+## Browser demo
+
+**<https://nib-demo.stoatworks-labs.com/>**: the plugin's own ten passes in WebGL2,
+every control with its own name, group and default, and the eight presets. nib has
+no CPU half, so nothing that draws on the page is a port: the shaders are spliced
+unedited into `demo/shaders.js`, and `demo/tools/check_shaders.py` (run by
+`tools/verify.sh`) fails on a changed character. Only the control mappings, the
+presets and the order the passes run in are ported. Checked once against
+`nibtest --pipe` fed the same frames, it came out within one level of 255 bar a
+handful of pixels on hard ink edges. The page's clips are clean and synthetic, so
+Flow shows less there than it does on footage; try your own. It needs WebGL2 with
+`EXT_color_buffer_float`. It's a demo, not the plugin, and the page says what it
+doesn't reproduce.
+
 ## Building and testing
 
 C++17 + GLSL 4.10, CMake, FFGL 2.1 (SDK vendored as a submodule). macOS

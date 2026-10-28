@@ -52,6 +52,22 @@ iteration.
   the build log.
 - Public repo. "Commit" = commit **and** push.
 
+## Browser demo
+- `demo/` is the page at https://nib-demo.stoatworks-labs.com (Cloudflare Worker
+  `nib-demo`, a ROUTE on a proxied AAAA 100:: record -- the zone's custom domains
+  are full; deleting the record takes the page dark with a green deploy).
+  `deploy.yml` redeploys it on a push to main; by hand: `cf-run npx wrangler deploy`.
+- `demo/shaders.js` is GENERATED: after changing `source/Shaders.cpp` run
+  `python3 demo/tools/check_shaders.py --write`; verify.sh fails on drift, on a new
+  piece the check does not list, and on a change to how the DoG/LIC passes are joined.
+- `demo/plugin.js` ports Controls.cpp, Presets.h and ProcessOpenGL's host glue by
+  hand, and nothing checks those but a reader: change them with the C++.
+- Verify a change to the page: serve `demo/` locally, load it headless, no console
+  errors, every program's `missing` set empty (`nibDemo.renderer.p`), move a control
+  and see the picture change, and `?embed=1` renders. The cross-check against
+  `nibtest --pipe` is in AGENTS.md; nothing reruns it automatically.
+- `demo/vendor/` is the shared kit: never edit it.
+
 ## Not done yet
 - Never loaded into Resolume; no OFX port. The frame pipe
   (`nibtest --pipe`/`--script`) exists since 2026-09-25 and filmed the project
